@@ -30,31 +30,31 @@ void reverseString(char *str)
 int main() {
     int sockfd;
     char buffer[MAXLINE];
-    struct sockaddr_in servaddr, cliaddr;
+    struct sockaddr_in server, client;
 
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("socket creation failed");
         exit(EXIT_FAILURE);
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
-    memset(&cliaddr, 0, sizeof(cliaddr));
+    memset(&server, 0, sizeof(server));
+    memset(&client, 0, sizeof(client));
 
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = INADDR_ANY;
-    servaddr.sin_port = htons(PORT);
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(PORT);
 
-    if (bind(sockfd, (const struct sockaddr *)&servaddr,
-             sizeof(servaddr)) < 0 ) {
+    if (bind(sockfd, (const struct sockaddr *)&server,
+             sizeof(server)) < 0 ) {
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
 
     int len, n;
-    len = sizeof(cliaddr);
+    len = sizeof(client);
 
     n = recvfrom(sockfd, (char *)buffer, MAXLINE,
-                 MSG_WAITALL, (struct sockaddr *)&cliaddr,
+                 MSG_WAITALL, (struct sockaddr *)&client,
                  &len);
 
     buffer[n] = '\0';
@@ -63,7 +63,7 @@ int main() {
     reverseString(buffer);
 
     sendto(sockfd, (const char *)buffer, strlen(buffer),
-           MSG_CONFIRM, (const struct sockaddr *)&cliaddr,
+           MSG_CONFIRM, (const struct sockaddr *)&client,
            len);
 
     printf("Reversed string sent to client.\n");
@@ -88,25 +88,25 @@ int main() {
 int main() {
     int sockfd;
     char buffer[MAXLINE];
-    struct sockaddr_in servaddr;
+    struct sockaddr_in server;
 
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("socket creation failed");
         exit(EXIT_FAILURE);
     }
 
-    memset(&servaddr, 0, sizeof(servaddr));
+    memset(&server, 0, sizeof(server));
 
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(PORT);
-    servaddr.sin_addr.s_addr = INADDR_ANY;
+    server.sin_family = AF_INET;
+    server.sin_port = htons(PORT);
+    server.sin_addr.s_addr = INADDR_ANY;
 
     printf("Enter a string to reverse: ");
     fgets(buffer, MAXLINE, stdin);
 
     sendto(sockfd, (const char *)buffer, strlen(buffer),
-           MSG_CONFIRM, (const struct sockaddr *)&servaddr,
-           sizeof(servaddr));
+           MSG_CONFIRM, (const struct sockaddr *)&server,
+           sizeof(server));
 
     printf("String sent to server.\n");
 

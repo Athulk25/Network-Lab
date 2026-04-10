@@ -27,29 +27,29 @@ void matrix_multiply(int A[MATRIX_SIZE][MATRIX_SIZE],
 }
 
 int main() {
-    int server_socket;
-    struct sockaddr_in server_address, client_address;
+    int sockfd;
+    struct sockaddr_in server, client;
     char buffer[MAX_BUFFER_SIZE];
 
     int matrixA[MATRIX_SIZE][MATRIX_SIZE];
     int matrixB[MATRIX_SIZE][MATRIX_SIZE];
     int result[MATRIX_SIZE][MATRIX_SIZE];
 
-    socklen_t length;
+    socklen_t len;
 
-    if ((server_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
         perror("Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
-    memset(&server_address, 0, sizeof(server_address));
+    memset(&server, 0, sizeof(server));
 
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_address.sin_port = htons(PORT);
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = htonl(INADDR_ANY);
+    server.sin_port = htons(PORT);
 
-    if (bind(server_socket, (struct sockaddr *)&server_address,
-             sizeof(server_address)) == -1) {
+    if (bind(sockfd, (struct sockaddr *)&server,
+             sizeof(server)) == -1) {
         perror("Socket bind failed");
         exit(EXIT_FAILURE);
     }
@@ -57,18 +57,18 @@ int main() {
     printf("Server started and listening on port %d...\n", PORT);
 
     while (1) {
-        length = sizeof(client_address);
+        len = sizeof(client);
 
-        if (recvfrom(server_socket, buffer, MAX_BUFFER_SIZE, 0,
-                     (struct sockaddr *)&client_address, &length) == -1) {
+        if (recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0,
+                     (struct sockaddr *)&client, &len) == -1) {
             perror("Receive failed");
             exit(EXIT_FAILURE);
         }
 
         memcpy(matrixA, buffer, sizeof(matrixA));
 
-        if (recvfrom(server_socket, buffer, MAX_BUFFER_SIZE, 0,
-                     (struct sockaddr *)&client_address, &length) == -1) {
+        if (recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0,
+                     (struct sockaddr *)&client, &len) == -1) {
             perror("Receive failed");
             exit(EXIT_FAILURE);
         }
@@ -79,14 +79,14 @@ int main() {
 
         memcpy(buffer, result, sizeof(result));
 
-        if (sendto(server_socket, buffer, sizeof(result), 0,
-                   (struct sockaddr *)&client_address, length) == -1) {
+        if (sendto(sockfd, buffer, sizeof(result), 0,
+                   (struct sockaddr *)&client, len) == -1) {
             perror("Send failed");
             exit(EXIT_FAILURE);
         }
     }
 
-    close(server_socket);
+    close(sockfd);
     return 0;
 }
 
@@ -115,27 +115,27 @@ void print_matrix(int matrix[MATRIX_SIZE][MATRIX_SIZE]) {
 }
 
 int main() {
-    int client_socket;
-    struct sockaddr_in server_address;
+    int sockfd;
+    struct sockaddr_in server;
     char buffer[MAX_BUFFER_SIZE];
 
     int matrixA[MATRIX_SIZE][MATRIX_SIZE];
     int matrixB[MATRIX_SIZE][MATRIX_SIZE];
     int result[MATRIX_SIZE][MATRIX_SIZE];
 
-    socklen_t length;
+    socklen_t len;
 
-    if ((client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
         perror("Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
-    memset(&server_address, 0, sizeof(server_address));
+    memset(&server, 0, sizeof(server));
 
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(PORT);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(PORT);
 
-    if (inet_pton(AF_INET, SERVER_IP, &server_address.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, SERVER_IP, &server.sin_addr) <= 0) {
         perror("Invalid address");
         exit(EXIT_FAILURE);
     }
@@ -155,17 +155,17 @@ int main() {
     }
 
     memcpy(buffer, matrixA, sizeof(matrixA));
-    sendto(client_socket, buffer, sizeof(matrixA), 0,
-           (struct sockaddr *)&server_address, sizeof(server_address));
+    sendto(sockfd, buffer, sizeof(matrixA), 0,
+           (struct sockaddr *)&server, sizeof(server));
 
     memcpy(buffer, matrixB, sizeof(matrixB));
-    sendto(client_socket, buffer, sizeof(matrixB), 0,
-           (struct sockaddr *)&server_address, sizeof(server_address));
+    sendto(sockfd, buffer, sizeof(matrixB), 0,
+           (struct sockaddr *)&server, sizeof(server));
 
-    length = sizeof(server_address);
+    len = sizeof(server);
 
-    recvfrom(client_socket, buffer, MAX_BUFFER_SIZE, 0,
-             (struct sockaddr *)&server_address, &length);
+    recvfrom(sockfd, buffer, MAX_BUFFER_SIZE, 0,
+             (struct sockaddr *)&server, &len);
 
     memcpy(result, buffer, sizeof(result));
 
@@ -178,6 +178,6 @@ int main() {
     printf("\nResult:\n");
     print_matrix(result);
 
-    close(client_socket);
+    close(sockfd);
     return 0;
 }
