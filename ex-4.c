@@ -1,4 +1,4 @@
-//udpserver.c
+//SERVER
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,7 +71,7 @@ int main() {
 }
 
 
-//udpclient.c
+//CLIENT
 
 #include <stdio.h>
 #include <stdlib.h>

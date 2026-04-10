@@ -1,14 +1,14 @@
-//Stop-and-Wait ARQ — Server (TCP)
+//SERVER
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<string.h>
-#include<arpa/inet.h>
-#include<sys/select.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <sys/select.h>
 
 int main()
 {
@@ -69,16 +69,16 @@ int main()
     close(s_sock);
 }
 
-//Stop-and-Wait ARQ — Client
+//CLIENT
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<string.h>
-#include<arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
 
 int main()
 {
@@ -115,10 +115,10 @@ int main()
     close(c_sock);
 }
 
-//Stop-and-Wait ARQ Simulation Program
+//SIMULATION
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int info;
 int seq;

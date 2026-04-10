@@ -1,9 +1,10 @@
-// tcpserver.c
-#include "sys/socket.h"
-#include "netinet/in.h"
-#include "stdio.h"
-#include "string.h"
-#include "stdlib.h"
+//SERVER
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -77,12 +78,13 @@ int main() {
     return 0;
 }
 
-// tcpclient.c
-#include "sys/socket.h"
-#include "netinet/in.h"
-#include "stdio.h"
-#include "string.h"
-#include "stdlib.h"
+//CLIENT
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 
