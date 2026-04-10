@@ -1,11 +1,12 @@
 //SERVER
-#include<stdio.h>
-#include<string.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<netdb.h>
-#include<unistd.h>
-#include<arpa/inet.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 // structure definition for designing the packet.
 struct frame {
@@ -18,8 +19,8 @@ struct ack {
 };
 
 int main() {
-    int serversocket;
-    struct sockaddr_in serveraddr, clientaddr;
+    int sockfd;
+    struct sockaddr_in server, client;
     socklen_t len;
 
     struct frame f1;
@@ -29,35 +30,35 @@ int main() {
     int i = 0, j = 0, framesend = 0, k, l, buffer;
     char req[50];
 
-    serversocket = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    bzero((char*)&serveraddr, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    serveraddr.sin_port = htons(5018);
-    serveraddr.sin_addr.s_addr = INADDR_ANY;
+    bzero((char*)&server, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(5018);
+    server.sin_addr.s_addr = INADDR_ANY;
 
-    bind(serversocket, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    bind(sockfd, (struct sockaddr*)&server, sizeof(server));
 
-    bzero((char*)&clientaddr, sizeof(clientaddr));
-    len = sizeof(clientaddr);
+    bzero((char*)&client, sizeof(client));
+    len = sizeof(client);
 
     // connection establishment
     printf("\nwaiting for client connection");
-    recvfrom(serversocket, req, sizeof(req), 0,
-             (struct sockaddr*)&clientaddr, &len);
+    recvfrom(sockfd, req, sizeof(req), 0,
+             (struct sockaddr*)&client, &len);
 
     printf("\nThe client connection obtained\t%s\n", req);
 
     // sending request for windowsize
     printf("\nSending request for window size\n");
-    sendto(serversocket, "REQUEST FOR WINDOWSIZE",
+    sendto(sockfd, "REQUEST FOR WINDOWSIZE",
            sizeof("REQUEST FOR WINDOWSIZE"), 0,
-           (struct sockaddr*)&clientaddr, sizeof(clientaddr));
+           (struct sockaddr*)&client, sizeof(client));
 
     // obtaining windowsize
     printf("Waiting for the window size\n");
-    recvfrom(serversocket, (char*)&windowsize, sizeof(windowsize), 0,
-             (struct sockaddr*)&clientaddr, &len);
+    recvfrom(sockfd, (char*)&windowsize, sizeof(windowsize), 0,
+             (struct sockaddr*)&client, &len);
 
     printf("\nThe window size obtained as:\t %d \n", windowsize);
 
@@ -69,15 +70,15 @@ int main() {
     printf("\nTotal frames or windows to be transmitted :%d\n", totalframes);
 
     // sending details to client
-    sendto(serversocket, (char*)&totalpackets, sizeof(totalpackets), 0,
-           (struct sockaddr*)&clientaddr, sizeof(clientaddr));
-    recvfrom(serversocket, req, sizeof(req), 0,
-             (struct sockaddr*)&clientaddr, &len);
+    sendto(sockfd, (char*)&totalpackets, sizeof(totalpackets), 0,
+           (struct sockaddr*)&client, sizeof(client));
+    recvfrom(sockfd, req, sizeof(req), 0,
+             (struct sockaddr*)&client, &len);
 
-    sendto(serversocket, (char*)&totalframes, sizeof(totalframes), 0,
-           (struct sockaddr*)&clientaddr, sizeof(clientaddr));
-    recvfrom(serversocket, req, sizeof(req), 0,
-             (struct sockaddr*)&clientaddr, &len);
+    sendto(sockfd, (char*)&totalframes, sizeof(totalframes), 0,
+           (struct sockaddr*)&client, sizeof(client));
+    recvfrom(sockfd, req, sizeof(req), 0,
+             (struct sockaddr*)&client, &len);
 
     printf("\nPress enter to start the process\n");
     fgets(req, 2, stdin);
@@ -101,14 +102,14 @@ int main() {
 
         printf("\nsending frame %d\n", framesend);
 
-        sendto(serversocket, (char*)&f1, sizeof(f1), 0,
-               (struct sockaddr*)&clientaddr, sizeof(clientaddr));
+        sendto(sockfd, (char*)&f1, sizeof(f1), 0,
+               (struct sockaddr*)&client, sizeof(client));
 
         printf("Waiting for the acknowledgment\n");
 
-        recvfrom(serversocket, (char*)&acknowledgement,
+        recvfrom(sockfd, (char*)&acknowledgement,
                  sizeof(acknowledgement), 0,
-                 (struct sockaddr*)&clientaddr, &len);
+                 (struct sockaddr*)&client, &len);
 
         j = 0;
         k = 0;
@@ -142,18 +143,18 @@ int main() {
     printf("\nAll frames sends successfully\n");
     printf("Closing connection with the client\n");
 
-    close(serversocket);
+    close(sockfd);
 }
 
 //CLIENT
 
-#include<stdio.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<netdb.h>
-#include<string.h>
-#include<unistd.h>
-#include<arpa/inet.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 struct frame {
     int packet[40];
@@ -164,11 +165,11 @@ struct ack {
 };
 
 int main() {
-    int clientsocket;
-    struct sockaddr_in serveraddr;
+    int sockfd;
+    struct sockaddr_in server;
     socklen_t len;
 
-    struct hostent *server;
+    struct hostent *host;
     struct frame f1;
     struct ack acknowledgement;
 
@@ -176,30 +177,30 @@ int main() {
     int i = 0, j = 0, framesreceived = 0, k, l, buffer;
     char req[50];
 
-    clientsocket = socket(AF_INET, SOCK_DGRAM, 0);
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    bzero((char*)&serveraddr, sizeof(serveraddr));
+    bzero((char*)&server, sizeof(server));
 
-    serveraddr.sin_family = AF_INET;
-    serveraddr.sin_port = htons(5018);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(5018);
 
-    server = gethostbyname("127.0.0.1");
+    host = gethostbyname("127.0.0.1");
 
-    bcopy((char*)server->h_addr,
-          (char*)&serveraddr.sin_addr.s_addr,
-          sizeof(server->h_addr));
+    bcopy((char*)host->h_addr,
+          (char*)&server.sin_addr.s_addr,
+          sizeof(host->h_addr));
 
     printf("sending request to the server\n");
 
-    sendto(clientsocket, "HI IAM CLIENT",
+    sendto(sockfd, "HI IAM CLIENT",
            sizeof("HI IAM CLIENT"), 0,
-           (struct sockaddr*)&serveraddr,
-           sizeof(serveraddr));
+           (struct sockaddr*)&server,
+           sizeof(server));
 
     printf("\nWaiting for reply\n");
 
-    recvfrom(clientsocket, req, sizeof(req), 0,
-             (struct sockaddr*)&serveraddr, &len);
+    recvfrom(sockfd, req, sizeof(req), 0,
+             (struct sockaddr*)&server, &len);
 
     printf("\nThe server has to send :\t%s\n", req);
 
@@ -207,26 +208,26 @@ int main() {
     scanf("%d", &windowsize);
 
     printf("\nSending window size\n");
-    sendto(clientsocket, (char*)&windowsize, sizeof(windowsize), 0,
-           (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    sendto(sockfd, (char*)&windowsize, sizeof(windowsize), 0,
+           (struct sockaddr*)&server, sizeof(server));
 
-    recvfrom(clientsocket, (char*)&totalpackets,
+    recvfrom(sockfd, (char*)&totalpackets,
              sizeof(totalpackets), 0,
-             (struct sockaddr*)&serveraddr, &len);
+             (struct sockaddr*)&server, &len);
 
     printf("\nTotal packets are: %d\n", totalpackets);
 
-    sendto(clientsocket, "RECEIVED", sizeof("RECEIVED"), 0,
-           (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    sendto(sockfd, "RECEIVED", sizeof("RECEIVED"), 0,
+           (struct sockaddr*)&server, sizeof(server));
 
-    recvfrom(clientsocket, (char*)&totalframes,
+    recvfrom(sockfd, (char*)&totalframes,
              sizeof(totalframes), 0,
-             (struct sockaddr*)&serveraddr, &len);
+             (struct sockaddr*)&server, &len);
 
     printf("\nTotal number of frames are: %d\n", totalframes);
 
-    sendto(clientsocket, "RECEIVED", sizeof("RECEIVED"), 0,
-           (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    sendto(sockfd, "RECEIVED", sizeof("RECEIVED"), 0,
+           (struct sockaddr*)&server, sizeof(server));
 
     printf("\nStarting the process of receiving\n");
 
@@ -248,8 +249,8 @@ int main() {
 
         printf("\nWaiting for the frame\n");
 
-        recvfrom(clientsocket, (char*)&f1, sizeof(f1), 0,
-                 (struct sockaddr*)&serveraddr, &len);
+        recvfrom(sockfd, (char*)&f1, sizeof(f1), 0,
+                 (struct sockaddr*)&server, &len);
 
         printf("\nReceived frame %d\n", framesreceived);
 
@@ -275,14 +276,14 @@ int main() {
 
         framesreceived++;
 
-        sendto(clientsocket, (char*)&acknowledgement,
+        sendto(sockfd, (char*)&acknowledgement,
                sizeof(acknowledgement), 0,
-               (struct sockaddr*)&serveraddr,
-               sizeof(serveraddr));
+               (struct sockaddr*)&server,
+               sizeof(server));
     }
 
     printf("\nAll frames received successfully\n");
     printf("Closing connection with the server\n");
 
-    close(clientsocket);
+    close(sockfd);
 }

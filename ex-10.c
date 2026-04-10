@@ -8,15 +8,16 @@
 
 int main(int argc, char *argv[])
 {
-    int socket_desc, new_socket, c;
+    int sockfd, new_sockfd;
     char filename[2000], message[2000];
     FILE *fp;
 
     struct sockaddr_in server, client;
+    socklen_t len;
 
-    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (socket_desc == -1)
+    if (sockfd == -1)
     {
         printf("Could not create socket");
         return 1;
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = htons(8888);
 
-    if (bind(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0)
+    if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
         puts("Bind failed");
         return 1;
@@ -36,14 +37,14 @@ int main(int argc, char *argv[])
 
     puts("Bind done");
 
-    listen(socket_desc, 3);
+    listen(sockfd, 3);
     puts("Waiting for incoming connections..");
 
-    c = sizeof(struct sockaddr_in);
+    len = sizeof(struct sockaddr_in);
 
-    new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t *)&c);
+    new_sockfd = accept(sockfd, (struct sockaddr *)&client, &len);
 
-    if (new_socket < 0)
+    if (new_sockfd < 0)
     {
         perror("Accept failed");
         return 1;
@@ -53,27 +54,27 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        recv(new_socket, filename, 2000, 0);
+        recv(new_sockfd, filename, 2000, 0);
 
         fp = fopen(filename, "r");
 
         if (fp == NULL)
         {
             strcpy(message, "File Not Found\n");
-            send(new_socket, message, 2000, 0);
+            send(new_sockfd, message, 2000, 0);
         }
         else
         {
             while (fgets(message, 2000, fp))
             {
-                send(new_socket, message, 2000, 0);
+                send(new_sockfd, message, 2000, 0);
                 puts(message);
             }
         }
 
         fclose(fp);
         strcpy(message, "EOF");
-        send(new_socket, message, 2000, 0);
+        send(new_sockfd, message, 2000, 0);
     }
 
     return 0;
@@ -89,14 +90,14 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    int socket_desc;
+    int sockfd;
     char message[2000], filename[2000];
     struct sockaddr_in server;
     FILE *fp;
 
-    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (socket_desc == -1)
+    if (sockfd == -1)
     {
         printf("Could not create socket");
         return 1;
@@ -106,7 +107,7 @@ int main(int argc, char *argv[])
     server.sin_family = AF_INET;
     server.sin_port = htons(8888);
 
-    if (connect(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0)
+    if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
         puts("Connect error");
         return 1;
@@ -117,7 +118,7 @@ int main(int argc, char *argv[])
     printf("File Name: ");
     scanf("%s", filename);
 
-    if (send(socket_desc, filename, strlen(filename), 0) < 0)
+    if (send(sockfd, filename, strlen(filename), 0) < 0)
     {
         puts("Send failed");
         return 1;
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
 
     fp = fopen("backup", "w");
 
-    while (recv(socket_desc, message, 2000, 0))
+    while (recv(sockfd, message, 2000, 0))
     {
         if (strcmp(message, "EOF") == 0)
             break;

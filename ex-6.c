@@ -1,36 +1,36 @@
-//Stop-and-Wait ARQ — Server (TCP)
+//SERVER
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<string.h>
-#include<arpa/inet.h>
-#include<sys/select.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <sys/select.h>
 
 int main()
 {
-    int s_sock, c_sock;
-    s_sock = socket(AF_INET, SOCK_STREAM, 0);
+    int sockfd, new_sockfd;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    struct sockaddr_in server, other;
-    socklen_t add;
+    struct sockaddr_in server, client;
+    socklen_t len;
 
     memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_port = htons(9009);
     server.sin_addr.s_addr = INADDR_ANY;
 
-    bind(s_sock,(struct sockaddr*)&server,sizeof(server));
-    listen(s_sock,5);
+    bind(sockfd,(struct sockaddr*)&server,sizeof(server));
+    listen(sockfd,5);
 
-    add = sizeof(other);
-    c_sock = accept(s_sock,(struct sockaddr*)&other,&add);
+    len = sizeof(client);
+    new_sockfd = accept(sockfd,(struct sockaddr*)&client,&len);
 
     char msg[50] = "server message ";
-    char buff[50];
+    char buffer[50];
     int flag = 0;
 
     fd_set set;
@@ -38,21 +38,21 @@ int main()
 
     for(int i=0;i<5;i++)
     {
-        bzero(buff,sizeof(buff));
-        strcpy(buff,msg);
-        buff[strlen(msg)] = i + '0';
+        bzero(buffer,sizeof(buffer));
+        strcpy(buffer,msg);
+        buffer[strlen(msg)] = i + '0';
 
-        printf("Message sent to client: %s\n",buff);
+        printf("Message sent to client: %s\n",buffer);
 
         FD_ZERO(&set);
-        FD_SET(c_sock,&set);
+        FD_SET(new_sockfd,&set);
 
         timeout.tv_sec = 2;
         timeout.tv_usec = 0;
 
-        write(c_sock,buff,sizeof(buff));
+        write(new_sockfd,buffer,sizeof(buffer));
 
-        int rv = select(c_sock+1,&set,NULL,NULL,&timeout);
+        int rv = select(new_sockfd+1,&set,NULL,NULL,&timeout);
 
         if(rv==0)
         {
@@ -61,64 +61,64 @@ int main()
             continue;
         }
 
-        read(c_sock,buff,sizeof(buff));
-        printf("Message from client: %s\n",buff);
+        read(new_sockfd,buffer,sizeof(buffer));
+        printf("Message from client: %s\n",buffer);
     }
 
-    close(c_sock);
-    close(s_sock);
+    close(new_sockfd);
+    close(sockfd);
 }
 
-//Stop-and-Wait ARQ — Client
+//CLIENT
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<string.h>
-#include<arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
 
 int main()
 {
-    int c_sock;
-    c_sock = socket(AF_INET, SOCK_STREAM, 0);
+    int sockfd;
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    struct sockaddr_in client;
-    memset(&client,0,sizeof(client));
+    struct sockaddr_in server;
+    memset(&server,0,sizeof(server));
 
-    client.sin_family = AF_INET;
-    client.sin_port = htons(9009);
-    client.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_family = AF_INET;
+    server.sin_port = htons(9009);
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    connect(c_sock,(struct sockaddr*)&client,sizeof(client));
+    connect(sockfd,(struct sockaddr*)&server,sizeof(server));
 
     char msg1[50] = "acknowledgement-0";
     char msg2[50] = "acknowledgement-1";
-    char buff[100];
+    char buffer[100];
 
     for(int i=0;i<5;i++)
     {
-        bzero(buff,sizeof(buff));
-        read(c_sock,buff,sizeof(buff));
+        bzero(buffer,sizeof(buffer));
+        read(sockfd,buffer,sizeof(buffer));
 
-        printf("Message received from server: %s\n",buff);
+        printf("Message received from server: %s\n",buffer);
         printf("Acknowledgement sent\n");
 
         if(i%2==0)
-            write(c_sock,msg1,sizeof(msg1));
+            write(sockfd,msg1,sizeof(msg1));
         else
-            write(c_sock,msg2,sizeof(msg2));
+            write(sockfd,msg2,sizeof(msg2));
     }
 
-    close(c_sock);
+    close(sockfd);
 }
 
-//Stop-and-Wait ARQ Simulation Program
+//SIMULATION
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int info;
 int seq;
