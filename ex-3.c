@@ -131,8 +131,7 @@ int main() {
         size_t received_len = 0;
 
         do {
-            k = recv(sock_desc, buf + received_len,
-                     sizeof(buf) - received_len - 1, 0);
+            k = recv(sock_desc, buf + received_len, sizeof(buf) - received_len - 1, 0);
 
             if (k == -1) {
                 perror("Error in receiving");
