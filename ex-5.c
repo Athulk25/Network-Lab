@@ -48,8 +48,7 @@ int main() {
     server.sin_addr.s_addr = htonl(INADDR_ANY);
     server.sin_port = htons(PORT);
 
-    if (bind(sockfd, (struct sockaddr *)&server,
-             sizeof(server)) == -1) {
+    if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) == -1) {
         perror("Socket bind failed");
         exit(EXIT_FAILURE);
     }
