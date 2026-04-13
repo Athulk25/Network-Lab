@@ -186,9 +186,9 @@ int main() {
 
     host = gethostbyname("127.0.0.1");
 
-    bcopy((char*)host->h_addr,
-          (char*)&server.sin_addr.s_addr,
-          sizeof(host->h_addr));
+    bcopy(host->h_addr,
+      &server.sin_addr.s_addr,
+      sizeof(host->h_addr));
 
     printf("sending request to the server\n");
 
