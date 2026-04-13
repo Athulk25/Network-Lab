@@ -92,6 +92,7 @@ int main()
 #include <stdlib.h>
 #include <string.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -106,7 +107,7 @@ int main()
 
     server.sin_family = AF_INET;
     server.sin_port = 3033;
-    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     printf("\nStarting up...");
     int len = sizeof(server);
