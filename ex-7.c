@@ -32,14 +32,14 @@ int main() {
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    bzero((char*)&server, sizeof(server));
+    bzero(&server, sizeof(server));
     server.sin_family = AF_INET;
     server.sin_port = htons(5018);
     server.sin_addr.s_addr = INADDR_ANY;
 
     bind(sockfd, (struct sockaddr*)&server, sizeof(server));
 
-    bzero((char*)&client, sizeof(client));
+    bzero(&client, sizeof(client));
     len = sizeof(client);
 
     // connection establishment
@@ -85,7 +85,7 @@ int main() {
 
     while(i < totalpackets) {
 
-        bzero((char*)&f1, sizeof(f1));
+        bzero(&f1, sizeof(f1));
         printf("\nInitializing the transmit buffer\n");
 
         buffer = i;
@@ -179,7 +179,7 @@ int main() {
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    bzero((char*)&server, sizeof(server));
+    bzero(&server, sizeof(server));
 
     server.sin_family = AF_INET;
     server.sin_port = htons(5018);
