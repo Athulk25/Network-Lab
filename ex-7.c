@@ -57,7 +57,7 @@ int main() {
 
     // obtaining windowsize
     printf("Waiting for the window size\n");
-    recvfrom(sockfd, (char*)&windowsize, sizeof(windowsize), 0,
+    recvfrom(sockfd, &windowsize, sizeof(windowsize), 0,
              (struct sockaddr*)&client, &len);
 
     printf("\nThe window size obtained as:\t %d \n", windowsize);
@@ -70,12 +70,12 @@ int main() {
     printf("\nTotal frames or windows to be transmitted :%d\n", totalframes);
 
     // sending details to client
-    sendto(sockfd, (char*)&totalpackets, sizeof(totalpackets), 0,
+    sendto(sockfd, &totalpackets, sizeof(totalpackets), 0,
            (struct sockaddr*)&client, sizeof(client));
     recvfrom(sockfd, req, sizeof(req), 0,
              (struct sockaddr*)&client, &len);
 
-    sendto(sockfd, (char*)&totalframes, sizeof(totalframes), 0,
+    sendto(sockfd, &totalframes, sizeof(totalframes), 0,
            (struct sockaddr*)&client, sizeof(client));
     recvfrom(sockfd, req, sizeof(req), 0,
              (struct sockaddr*)&client, &len);
@@ -102,12 +102,12 @@ int main() {
 
         printf("\nsending frame %d\n", framesend);
 
-        sendto(sockfd, (char*)&f1, sizeof(f1), 0,
+        sendto(sockfd, &f1, sizeof(f1), 0,
                (struct sockaddr*)&client, sizeof(client));
 
         printf("Waiting for the acknowledgment\n");
 
-        recvfrom(sockfd, (char*)&acknowledgement,
+        recvfrom(sockfd, &acknowledgement,
                  sizeof(acknowledgement), 0,
                  (struct sockaddr*)&client, &len);
 
@@ -208,10 +208,10 @@ int main() {
     scanf("%d", &windowsize);
 
     printf("\nSending window size\n");
-    sendto(sockfd, (char*)&windowsize, sizeof(windowsize), 0,
+    sendto(sockfd, &windowsize, sizeof(windowsize), 0,
            (struct sockaddr*)&server, sizeof(server));
 
-    recvfrom(sockfd, (char*)&totalpackets,
+    recvfrom(sockfd, &totalpackets,
              sizeof(totalpackets), 0,
              (struct sockaddr*)&server, &len);
 
@@ -220,7 +220,7 @@ int main() {
     sendto(sockfd, "RECEIVED", sizeof("RECEIVED"), 0,
            (struct sockaddr*)&server, sizeof(server));
 
-    recvfrom(sockfd, (char*)&totalframes,
+    recvfrom(sockfd, &totalframes,
              sizeof(totalframes), 0,
              (struct sockaddr*)&server, &len);
 
@@ -249,7 +249,7 @@ int main() {
 
         printf("\nWaiting for the frame\n");
 
-        recvfrom(sockfd, (char*)&f1, sizeof(f1), 0,
+        recvfrom(sockfd, &f1, sizeof(f1), 0,
                  (struct sockaddr*)&server, &len);
 
         printf("\nReceived frame %d\n", framesreceived);
@@ -276,7 +276,7 @@ int main() {
 
         framesreceived++;
 
-        sendto(sockfd, (char*)&acknowledgement,
+        sendto(sockfd, &acknowledgement,
                sizeof(acknowledgement), 0,
                (struct sockaddr*)&server,
                sizeof(server));
