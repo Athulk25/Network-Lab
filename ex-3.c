@@ -82,6 +82,7 @@ int main() {
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -101,7 +102,7 @@ int main() {
     }
 
     server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_port = htons(3003);
 
     k = connect(sockfd, (struct sockaddr*)&server, sizeof(server));
