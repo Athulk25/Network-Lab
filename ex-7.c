@@ -62,12 +62,11 @@ int main() {
 
     printf("\nThe window size obtained as:\t %d \n", windowsize);
 
-    printf("\nObtaining packets from network layer\n");
+    printf("\nCalculating transmission parameters...\n");
     totalpackets = windowsize * 5;
     totalframes = 5;
 
-    printf("\nTotal packets obtained :%d\n", totalpackets);
-    printf("\nTotal frames or windows to be transmitted :%d\n", totalframes);
+    printf("Total packets: %d | Total frames: %d\n", totalpackets, totalframes);
 
     // sending details to client
     sendto(sockfd, &totalpackets, sizeof(totalpackets), 0,
