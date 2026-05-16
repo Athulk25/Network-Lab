@@ -1,149 +1,170 @@
-//SERVER
+// SERVER - Go Back N Protocol
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #define WINDOW_SIZE 4
-#define MAX_PACKET 9
-
-void itoa(int number, char numberString[])
-{
-    numberString[0] = (char)(number + 48);
-    numberString[1] = '\0';
-}
+#define TOTAL_PACKETS 10
 
 int main()
 {
-    int sockfd, new_sockfd, windowStart = 1, windowEnd = WINDOW_SIZE, windowCurrent;
-    char buffer[100];
-    socklen_t len;
+    int sockfd, new_sockfd;
     struct sockaddr_in server, client;
-    int all_sent = 0;
+    socklen_t len;
+
+    char buffer[100];
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
     server.sin_family = AF_INET;
     server.sin_port = htons(3033);
     server.sin_addr.s_addr = INADDR_ANY;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    printf("\nStarting up...");
+    bind(sockfd, (struct sockaddr *)&server, sizeof(server));
 
-    int k = bind(sockfd, (struct sockaddr *)&server, sizeof(server));
-    if (k == -1)
-    {
-        printf("Error in binding\n");
-        return -1;
-    }
+    listen(sockfd, 1);
+
+    printf("Starting Server...\n");
 
     len = sizeof(client);
-    listen(sockfd, 1);
+
     new_sockfd = accept(sockfd, (struct sockaddr *)&client, &len);
-    recv(new_sockfd, buffer, 100, 0);
-    printf("\nReceived a request from client. Sending packets (Go-Back-N)...");
 
-    while (!all_sent)
+    recv(new_sockfd, buffer, sizeof(buffer), 0);
+
+    int base = 0;
+    int nextseq = 0;
+
+    while(base < TOTAL_PACKETS)
     {
-        // Send packets in current window
-        for (windowCurrent = windowStart; windowCurrent <= windowEnd && windowCurrent <= MAX_PACKET; windowCurrent++)
+        while(nextseq < base + WINDOW_SIZE &&
+              nextseq < TOTAL_PACKETS)
         {
-            itoa(windowCurrent, buffer);
-            send(new_sockfd, buffer, 100, 0);
-            printf("\nPacket Sent: %d", windowCurrent);
+            sprintf(buffer, "%d", nextseq);
+
+            send(new_sockfd, buffer, sizeof(buffer), 0);
+
+            printf("Packet Sent: %d\n", nextseq);
+
+            nextseq++;
         }
 
-        // Wait for ACK or RETRANSMIT
-        recv(new_sockfd, buffer, 100, 0);
-        if (buffer[0] == 'R')
-        {
-            int pkt = atoi(&buffer[1]);
-            printf("\n** Received a RETRANSMIT for packet %d. Resending window from %d...", pkt, pkt);
-            windowStart = pkt; // Go back
-            windowEnd = windowStart + WINDOW_SIZE - 1;
-        }
-        else if (buffer[0] == 'A')
+        recv(new_sockfd, buffer, sizeof(buffer), 0);
+
+        if(buffer[0] == 'A')
         {
             int ack = atoi(&buffer[1]);
-            printf("\n** Received ACK for packet %d.", ack);
-            windowStart = ack + 1;
-            windowEnd = windowStart + WINDOW_SIZE - 1;
-            if (ack >= MAX_PACKET)
-                all_sent = 1;
+
+            printf("ACK Received for Packet %d\n", ack);
+
+            base = ack + 1;
+        }
+        else if(buffer[0] == 'R')
+        {
+            int resend = atoi(&buffer[1]);
+
+            printf("Retransmission Requested from Packet %d\n",
+                   resend);
+
+            nextseq = resend;
+            base = resend;
         }
     }
 
-    printf("\nAll packets sent and acknowledged. Closing connection.\n");
+    printf("\nAll packets transmitted successfully.\n");
+
     close(new_sockfd);
     close(sockfd);
+
     return 0;
 }
 
-//CLIENT
+// CLIENT - Go Back N Protocol
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
-#define WINDOW_SIZE 4
-#define MAX_PACKET 9
+#define TOTAL_PACKETS 10
 
 int main()
 {
-    int sockfd, firstTime = 1, currentPacket;
-    char buffer[100], digit[2];
+    int sockfd;
     struct sockaddr_in server;
+
+    char buffer[100];
+
+    int expected = 0;
+    int lost = 0;
+
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
     server.sin_family = AF_INET;
     server.sin_port = htons(3033);
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
-    printf("\nStarting up...");
-    int len = sizeof(server);
-    printf("\nEstablishing connection to server...");
-    connect(sockfd, (struct sockaddr *)&server, len);
+
+    connect(sockfd, (struct sockaddr *)&server,
+            sizeof(server));
+
     sprintf(buffer, "REQUEST");
-    send(sockfd, buffer, strlen(buffer), 0);
-    int expected = 1;
-    int all_received = 0;
-    while (!all_received)
+
+    send(sockfd, buffer, sizeof(buffer), 0);
+
+    printf("Connected to Server...\n");
+
+    while(expected < TOTAL_PACKETS)
     {
-        memset(buffer, 0, sizeof(buffer));
-        recv(sockfd, buffer, 100, 0);
-        currentPacket = atoi(buffer);
-        printf("\nGot packet: %d", currentPacket);
-        if (currentPacket == 3 && firstTime)
+        recv(sockfd, buffer, sizeof(buffer), 0);
+
+        int pkt = atoi(buffer);
+
+        printf("\nReceived Packet: %d\n", pkt);
+
+        // Simulate loss of packet 3 only once
+        if(pkt == 3 && lost == 0)
         {
-            printf("\n** Simulation: Packet data corrupted or incomplete.");
-            printf("\n** Sending RETRANSMIT for packet 3.");
-            sprintf(buffer, "R3");
-            send(sockfd, buffer, strlen(buffer), 0);
-            firstTime = 0;
+            printf("Packet %d Lost/Corrupted\n", pkt);
+
+            sprintf(buffer, "R%d", pkt);
+
+            send(sockfd, buffer, sizeof(buffer), 0);
+
+            lost = 1;
+
+            continue;
         }
-        else if (currentPacket == expected)
+
+        if(pkt == expected)
         {
-            printf("\n** Packet Accepted -> Sending ACK\n");
-            sprintf(buffer, "A%d",currentPacket);
-            send(sockfd, buffer, strlen(buffer), 0);
+            printf("Packet %d Accepted\n", pkt);
+
+            sprintf(buffer, "A%d", pkt);
+
+            send(sockfd, buffer, sizeof(buffer), 0);
+
+            printf("ACK Sent for Packet %d\n", pkt);
+
             expected++;
-            if (currentPacket >= MAX_PACKET)
-                all_received = 1;
         }
         else
         {
-            // Out of order or duplicate, send ACK for last accepted
-            sprintf(buffer, "A%d", expected-1);
-            send(sockfd, buffer, strlen(buffer), 0);
+            printf("Out of Order Packet Discarded: %d\n",
+                   pkt);
+
+            sprintf(buffer, "A%d", expected - 1);
+
+            send(sockfd, buffer, sizeof(buffer), 0);
         }
     }
-    printf("\nAll packets received. Exiting.\n");
+
+    printf("\nAll packets received successfully.\n");
+
     close(sockfd);
+
     return 0;
 }
