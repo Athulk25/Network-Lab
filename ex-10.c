@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     if (sockfd == -1)
     {
-        printf("Could not create socket");
+        printf("Could not create socket\n");
         return 1;
     }
 
@@ -31,14 +31,14 @@ int main(int argc, char *argv[])
 
     if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        puts("Bind failed");
+        printf("Bind failed\n");
         return 1;
     }
 
-    puts("Bind done");
+    printf("Bind done\n");
 
     listen(sockfd, 3);
-    puts("Waiting for incoming connections..");
+    printf("Waiting for incoming connections..\n");
 
     len = sizeof(struct sockaddr_in);
 
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    puts("Connection accepted");
+    printf("Connection accepted\n");
 
     while (1)
     {
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
             while (fgets(message, 2000, fp))
             {
                 send(new_sockfd, message, 2000, 0);
-                puts(message);
+                printf("%s", message);
             }
         }
 
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (sockfd == -1)
     {
-        printf("Could not create socket");
+        printf("Could not create socket\n");
         return 1;
     }
 
@@ -109,18 +109,18 @@ int main(int argc, char *argv[])
 
     if (connect(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     {
-        puts("Connect error");
+        printf("Connect error\n");
         return 1;
     }
 
-    puts("Connected");
+    printf("Connected\n");
 
     printf("File Name: ");
     scanf("%s", filename);
 
     if (send(sockfd, filename, strlen(filename), 0) < 0)
     {
-        puts("Send failed");
+        printf("Send failed\n");
         return 1;
     }
 
@@ -132,10 +132,11 @@ int main(int argc, char *argv[])
             break;
 
         fputs(message, fp);
-        puts(message);
+        printf("%s", message);
     }
 
     fclose(fp);
 
     return 0;
 }
+
