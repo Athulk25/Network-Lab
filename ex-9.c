@@ -41,7 +41,7 @@ int main()
                 {
                     if (rt[i].dist[j] > dmat[i][k] + rt[k].dist[j])
                     {
-                        rt[i].dist[j] = rt[i].dist[k] + rt[k].dist[j];
+                        rt[i].dist[j] = dmat[i][k] + rt[k].dist[j];
                         rt[i].from[j] = k;
                         count++;
                     }
